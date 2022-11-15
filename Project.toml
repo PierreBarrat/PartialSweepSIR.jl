@@ -1,0 +1,13 @@
+name = "PartialSweepSIR"
+uuid = "93018257-e3a9-44d7-b14d-a6c792d03116"
+authors = ["Pierre Barrat-Charlaix"]
+version = "0.1.0"
+
+[compat]
+julia = "1.8"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
