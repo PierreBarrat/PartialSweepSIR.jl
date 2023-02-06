@@ -14,6 +14,10 @@ function Base.getindex(sol::Solution, tvals::AbstractVector, i, a, g)
 	idx = sir_index(i, a, g, sol.parameters)
 	return map(t -> sol.sol(t)[idx], tvals)
 end
+function Base.getindex(sol::Solution, t::Number, i, g, a)
+	idx = sir_index(i, g, a, sol.parameters)
+	sol.sol(t)[idx]
+end
 
 """
 	simulate(X::SIRState, tspan)

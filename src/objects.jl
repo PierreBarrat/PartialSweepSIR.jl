@@ -257,7 +257,7 @@ Index of strain `a` in SIR class `g` in region `i`.
 - Linear size of each region: `4*N`
 - Total size of array `4*N*M` if `M` is the number of regions
 """
-function sir_index(i::Int, a, g, N::Int)
+function sir_index(i, a, g, N::Int)
 	# @assert 1 <= i <= M "Error accessing region $i in size $M SIR model"
 	# @assert 1 <= a <= N "Error accessing region $i in size $M SIR model"
 
@@ -273,7 +273,7 @@ function sir_index(i::Int, a, g, N::Int)
 
 	return region_offset .+ virus_offset .+ g
 end
-sir_index(i::Int, ::Colon, g, N::Int) = sir_index(i, 1:N, g, N)
+sir_index(i, ::Colon, g, N::Int) = sir_index(i, 1:N, g, N)
 sir_index(i, a, g, p::Parameters) = sir_index(i, a, g, p.N)
 sir_index(i, a, g, s::SIRState) = sir_index(i, a, g, s.parameters)
 

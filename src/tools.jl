@@ -67,6 +67,17 @@ function grow_cross_immunity(K, b, f)
 	return new_K
 end
 
+function cross_immunity(backward::AbstractVector, forward::AbstractVector)
+	@assert length(backward) == length(forward) "Input must be vectors of same length"
+	N = length(backward)
+	K = ones(N, N)
+	for j in 1:N, i in 1:(j-1)
+		K[i,j] = backward[j]
+		K[j,i] = forward[j]
+	end
+	return K
+end
+
 
 
 """
