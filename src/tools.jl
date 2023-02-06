@@ -106,7 +106,15 @@ end
 Frequency of infections by virus `a` accross regions.
 """
 function frequency(sol::Solution, tvals, a)
-	mean(frequency(sol, tvals, i, a) for i in 1:sol.parameters.M)
+	Itot = sum(1:sol.parameters.M) do i
+		@chain sol[tvals, i, :, :I] map(sum, _)
+	end
+
+	Ia = sum(1:sol.parameters.M) do i
+		sol[tvals, i, a, :I]
+	end
+
+	return Ia ./ Itot
 end
 
 
