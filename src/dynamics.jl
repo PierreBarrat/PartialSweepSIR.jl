@@ -82,11 +82,8 @@ function SIR!(du, u, p, t)
 		idx = sir_index(i, a, :R, N)
 		du[idx] += δ * (u[sir_index(i,a,:I,N)] + u[sir_index(i,a,:C,N)])
 		du[idx] -= γ * u[idx]
-		# for b in 1:N
-		# 	du[idx] += δ * p.K[i][a,b] * u[sir_index(i, :I, b, N)]
-		# end
 	end
-	# @assert isapprox(sum(du), 0, atol=1e-15) "$(sum(du))"
+
 	@debug _conserved(du, p), u, p
 	return nothing
 end
