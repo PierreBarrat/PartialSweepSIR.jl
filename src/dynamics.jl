@@ -35,6 +35,21 @@ function simulate(X::SIRState, tspan)
 	)
 end
 
+function gradient(X::SIRState)
+	u = vec(X)
+	du = similar(u)
+	p = (params = X.parameters, K = [r.K for r in regions(X)])
+	SIR!(du, u, p, 0)
+
+	dX = deepcopy(X)
+	(N, M) = (X.parameters.M, X.parameters.N)
+	for i in 1:M, a in 1:N, g in (:I, :S, :C, :R)
+		idx = sir_index(i, a, g, N)
+		setfield!(dX.regions[i].viruses[a], g, du[idx])
+	end
+	return dX
+end
+
 function SIR!(du, u, p, t)
 	#=
 	Organization of u
