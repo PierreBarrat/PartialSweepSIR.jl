@@ -15,7 +15,7 @@ end
 
 ################## Virus ##################
 
-@with_kw struct Virus
+@with_kw mutable struct Virus
 	S :: Float64
 	I :: Float64
 	C :: Float64
@@ -174,9 +174,12 @@ function Base.getindex(X::SIRState, i::Int, a::Int, g)
 	return getfield(X.regions[i].viruses[a], g)
 end
 Base.getindex(X::SIRState, i::Int, A::AbstractRange, g) = [X[i, a, g] for a in A]
-Base.getindex(X::SIRState, i::Int, A::Colon, g) = X[i, 1:(X.parameters.N), g]
+Base.getindex(X::SIRState, i::Int, ::Colon, g) = X[i, 1:(X.parameters.N), g]
 Base.getindex(X::SIRState, I::AbstractRange, a::Int, g) = [X[i, a, g] for i in I]
-Base.getindex(X::SIRState, I::Colon, a::Int, g) = X[1:(X.parameters.M), a, g]
+Base.getindex(X::SIRState, Colon, a::Int, g) = X[1:(X.parameters.M), a, g]
+function Base.getindex(X::SIRState, ::Colon, ::Colon, g)
+	return vcat([X[i, :, g] for i in 1:X.parameters.M]...)
+end
 
 Base.vec(X::SIRState) = @chain X regions map(vec, _) vcat(_...)
 

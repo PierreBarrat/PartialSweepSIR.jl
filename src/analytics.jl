@@ -49,27 +49,32 @@ end
 # """
 # !! THIS IS FALSE FOR S and R (but should be good for I)
 # """
-# function equilibrium_M(X::SIRState)
-# 	@unpack M, N, α, γ, δ, C = X.parameters
+function equilibrium_M(X::SIRState)
+	@unpack M, N, α, γ, δ, C = X.parameters
 
-# 	eq_regions = []
-# 	for (i, region) in enumerate(X.regions)
-# 		Z = sum(C[i,:])
-# 		K_av = sum(C[i,j] * r.K for (j,r) in enumerate(X.regions)) / Z
+	eq_regions = []
+	for (i, region) in enumerate(X.regions)
+		Z = sum(C[i,:])
+		K_av = sum(C[i,j] * r.K for (j,r) in enumerate(X.regions)) / Z
 
-# 		S = δ/α * ones(N)
-# 		I = try
-# 			γ * (1-δ/α) / (δ + γ) * (K_av \ ones(N))
-# 		catch err
-# 			@error "Singular `K_av`: rank = $(rank(K_av)) < $N. Cannot compute equilibrium." K_av
-# 			error(err)
-# 		end
-# 		R = 1 .- S - region.K*I
+		S = δ/α * ones(N)
+		I = try
+			γ/δ * (1-δ/α) * (K_av \ ones(N))
+		catch err
+			@error "Singular `K_av`: rank = $(rank(K_av)) < $N. Cannot compute equilibrium." K_av
+			error(err)
+		end
+		R = 1 .- S .- I
 
-# 		push!(eq_regions, Region(; S, I, R, K=copy(region.K)))
-# 	end
+		viruses = Vector{Virus}(undef, N)
+		for (a, (s, i, c, r)) in enumerate(zip(S, I, C, R))
+			viruses[a] = Virus(; S=s, I=i, C=0, R=r)
+		end
 
-# 	return SIRState(; regions = eq_regions, parameters = deepcopy(X.parameters))
-# end
+		push!(eq_regions, Region(; viruses, K=copy(region.K)))
+	end
+
+	return SIRState(; regions = eq_regions, parameters = deepcopy(X.parameters))
+end
 
 
