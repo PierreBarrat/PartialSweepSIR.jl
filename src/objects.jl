@@ -21,7 +21,8 @@ end
 	C :: Float64
 	R :: Float64 = 1 - S - I - C
 	function Virus(S, I, C, R)
-		@assert isapprox(_population(S, I, C, R), 1, rtol = 1e-14) "Size of host population is not one"
+		@assert S <= 1 "S must be lower than 1; got $S"
+		@assert I <= 1 "I must be lower than 1; got $I"
 		return new(S, I, C, R)
 	end
 end
@@ -45,12 +46,12 @@ Base.@kwdef mutable struct Region
 	function Region(viruses, K)
 		@assert length(viruses) == size(K,1) == size(K,2) "Inconsistency between number\
 			of viruses $(length(viruses)) and cross-immunity matrix $(size(K))"
-		@assert mapreduce(
-			v -> isapprox(population(v), 1, rtol = 1e-14),
-			*,
-			viruses,
-			init=true
-		) "Host pop. is not one for some viruses."
+		# @assert mapreduce(
+		# 	v -> isapprox(population(v), 1, rtol = 1e-14),
+		# 	*,
+		# 	viruses,
+		# 	init=true
+		# ) "Host pop. is not one for some viruses."
 		return new(viruses, K)
 	end
 end

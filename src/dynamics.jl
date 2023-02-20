@@ -75,7 +75,8 @@ function SIR!(du, u, p, t)
 			du[idx] -=
 				α * C[i,j] * u[sir_index(i,a,:S,N)] * p.K[i][a,b] * u[sir_index(j,b,:I,N)]
 		end
-		du[idx] += γ * u[sir_index(i, a, :R, N)]
+		# du[idx] += γ * u[sir_index(i, a, :R, N)]
+		du[idx] += γ * (1 - u[sir_index(i, a, :S, N)])
 
 		# I
 		idx = sir_index(i, a, :I, N)
