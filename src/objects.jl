@@ -20,9 +20,10 @@ end
 	I :: Float64
 	C :: Float64
 	R :: Float64 = 1 - S - I - C
-	function Virus(S, I, C, R)
-		@assert isapprox(_population(S, I, C, R), 1, rtol = 1e-14) "Size of host population is not one"
-		return new(S, I, C, R)
+	ϕ :: Float64 = 1 # intrinsic fitness, multiplicative of α
+	function Virus(S, I, C, R, ϕ)
+		@assert isapprox(_population(S, I, C, R), 1, rtol = 1e-12) "Virus creation: Size of host population is not one; got $(_population(S, I, C, R))"
+		return new(S, I, C, R, ϕ)
 	end
 end
 
@@ -46,7 +47,7 @@ Base.@kwdef mutable struct Region
 		@assert length(viruses) == size(K,1) == size(K,2) "Inconsistency between number\
 			of viruses $(length(viruses)) and cross-immunity matrix $(size(K))"
 		@assert mapreduce(
-			v -> isapprox(population(v), 1, rtol = 1e-14),
+			v -> isapprox(population(v), 1, rtol = 1e-12),
 			*,
 			viruses,
 			init=true
@@ -150,7 +151,7 @@ end
 Create `SIRState` from a vector and an array of cross-immunity matrices `Ks`.
 Such that `vec(out::SIRState) == dat`.
 """
-function SIRState(dat::Vector{Float64}, Ks, parameters::Parameters)
+function SIRState(dat::Vector{Float64}, Ks, parameters::Parameters, ϕ)
 	@assert length(dat) == parameters.M * parameters.N * 4
 	regions = Region[]
 	for i in 1:parameters.M
@@ -161,6 +162,7 @@ function SIRState(dat::Vector{Float64}, Ks, parameters::Parameters)
 				I = dat[sir_index(i, a, :I, parameters)],
 				C = dat[sir_index(i, a, :C, parameters)],
 				R = dat[sir_index(i, a, :R, parameters)],
+				ϕ = ϕ[i][a],
 			)
 		end
 		r = Region(; viruses, K = Ks[i])
@@ -261,8 +263,7 @@ Index of strain `a` in SIR class `g` in region `i`.
 - Total size of array `4*N*M` if `M` is the number of regions
 """
 function sir_index(i, a, g, N::Int)
-	# @assert 1 <= i <= M "Error accessing region $i in size $M SIR model"
-	# @assert 1 <= a <= N "Error accessing region $i in size $M SIR model"
+	@assert all(1 .<= a .<= N) "Error accessing strain $a in SIR model with $N strains"
 
 	a = symb_to_virus.(a)
 	g = symb_to_compartment.(g)

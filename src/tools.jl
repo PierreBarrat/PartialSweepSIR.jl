@@ -144,7 +144,8 @@ function _set_infected!(r::Region, a::Int, val)
 		I = val,
 		C = old_v.C,
 		R = old_v.R,
-		S = 1 - old_v.C - old_v.R - val
+		S = 1 - old_v.C - old_v.R - val,
+		ϕ = old_v.ϕ,
 	)
 
 	r.viruses[a] = new_v
