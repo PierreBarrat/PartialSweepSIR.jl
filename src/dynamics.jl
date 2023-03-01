@@ -2,12 +2,13 @@ Base.@kwdef struct Solution
 	sol
 	tspan :: Tuple{Float64, Float64}
 	parameters :: Parameters
+	ϕ :: Vector{Vector{Float64}} # ϕ[j][a]
 	K :: Vector{Matrix{Float64}}
 end
 
 function (sol::Solution)(t::Real)
 	@assert t <= sol.tspan[2] "Time span of solution $(sol.tspan) - got $t"
-	return SIRState(sol.sol(t), sol.K, sol.parameters)
+	return SIRState(sol.sol(t), sol.K, sol.parameters, sol.ϕ)
 end
 
 function Base.getindex(sol::Solution, tvals::AbstractVector, i, a, g)
@@ -26,17 +27,19 @@ Return a `Solution` object.
 """
 function simulate(X::SIRState, tspan)
 	u0 = vec(X)
+	ϕ = map(regions(X)) do r
+		map(v -> v.ϕ, r.viruses)
+	end
 	p = (
 		params = X.parameters,
 		K = [r.K for r in regions(X)],
-		ϕ = map(regions(X)) do r
-			map(v -> v.ϕ, r.viruses)
-		end,
+		ϕ = ϕ,
 	)
 	return Solution(;
 		sol = solve(ODEProblem(SIR!, u0, tspan, p), Tsit5()),
 		tspan = tspan,
 		parameters = parameters(X),
+		ϕ = ϕ,
 		K = p.K,
 	)
 end
@@ -85,7 +88,7 @@ function SIR!(du, u, p, t)
 			# region j infecting region i
 			# and virus b generating immunity to a
 			du[idx] -=
-				α * p.ϕ[j,b] * C[i,j] * u[sir_index(i,a,:S,N)] * p.K[i][a,b] * u[sir_index(j,b,:I,N)]
+				α * p.ϕ[j][b] * C[i,j] * u[sir_index(i,a,:S,N)] * p.K[i][a,b] * u[sir_index(j,b,:I,N)]
 		end
 		du[idx] += γ * u[sir_index(i, a, :R, N)]
 
@@ -93,7 +96,7 @@ function SIR!(du, u, p, t)
 		idx = sir_index(i, a, :I, N)
 		for j in 1:M
 			# region j infecting region i
-			du[idx] += α * p.ϕ[j,a] * C[i,j] * u[sir_index(i, a, :S, N)] * u[sir_index(j, a, :I, N)]
+			du[idx] += α * p.ϕ[j][a] * C[i,j] * u[sir_index(i, a, :S, N)] * u[sir_index(j, a, :I, N)]
 		end
 		du[idx] -= δ * u[idx]
 
@@ -101,7 +104,7 @@ function SIR!(du, u, p, t)
 		idx = sir_index(i, a, :C, N)
 		for j in 1:M, b in Iterators.filter(!=(a), 1:N)
 			du[idx] +=
-				α * p.ϕ[j,b] * C[i,j] * u[sir_index(i,a,:S,N)] * p.K[i][a,b] * u[sir_index(j,b,:I,N)]
+				α * p.ϕ[j][b] * C[i,j] * u[sir_index(i,a,:S,N)] * p.K[i][a,b] * u[sir_index(j,b,:I,N)]
 		end
 		du[idx] -= δ * u[idx]
 

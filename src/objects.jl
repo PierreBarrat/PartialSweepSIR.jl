@@ -151,7 +151,7 @@ end
 Create `SIRState` from a vector and an array of cross-immunity matrices `Ks`.
 Such that `vec(out::SIRState) == dat`.
 """
-function SIRState(dat::Vector{Float64}, Ks, parameters::Parameters)
+function SIRState(dat::Vector{Float64}, Ks, parameters::Parameters, ϕ)
 	@assert length(dat) == parameters.M * parameters.N * 4
 	regions = Region[]
 	for i in 1:parameters.M
@@ -162,6 +162,7 @@ function SIRState(dat::Vector{Float64}, Ks, parameters::Parameters)
 				I = dat[sir_index(i, a, :I, parameters)],
 				C = dat[sir_index(i, a, :C, parameters)],
 				R = dat[sir_index(i, a, :R, parameters)],
+				ϕ = ϕ[i][a],
 			)
 		end
 		r = Region(; viruses, K = Ks[i])

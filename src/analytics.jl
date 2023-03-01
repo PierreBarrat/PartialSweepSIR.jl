@@ -19,21 +19,25 @@ function equilibrium_1(X::SIRState)
 end
 
 function _equilibrium(r::Region, p::Parameters)
-	S, I, C, R = _equilibrium(r.K, p)
+	ϕ = map(v -> v.ϕ, r.viruses)
+	S, I, C, R = _equilibrium(r.K, p, ϕ)
 	viruses = Vector{Virus}(undef, p.N)
-	for (a, (s, i, c, r)) in enumerate(zip(S, I, C, R))
-		viruses[a] = Virus(; S=s, I=i, C=c, R=r)
+	for (a, (s, i, c, r, v)) in enumerate(zip(S, I, C, R, r.viruses))
+		viruses[a] = Virus(; S=s, I=i, C=c, R=r, ϕ=v.ϕ)
 	end
 	return Region(; viruses, K=copy(r.K))
 end
-function _equilibrium(K::Matrix, p::Parameters)
+function _equilibrium(K::Matrix, p::Parameters, ϕ)
 	@unpack N, α, γ, δ = p
-
-	S = δ/α * ones(N)
+	@info ϕ
+	h = 1 .- δ/α./ϕ
+	S = 1 .- h
+	G = (ϕ'./ ϕ) .* K
+	@info G
 	I = try
-		γ/δ * (1-δ/α) * (K \ ones(N))
+		γ/δ * (G \ h)
 	catch err
-		@error "Singular `K`: rank = $(rank(K)) < $N. Cannot compute equilibrium." K
+		@error "Singular `G`: rank = $(rank(G)) < $N. Cannot compute equilibrium." K, ϕ, G
 		error(err)
 	end
 	C = γ/δ * (1-δ/α) .- I
