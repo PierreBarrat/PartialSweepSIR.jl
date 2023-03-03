@@ -29,11 +29,9 @@ function _equilibrium(r::Region, p::Parameters)
 end
 function _equilibrium(K::Matrix, p::Parameters, ϕ)
 	@unpack N, α, γ, δ = p
-	@info ϕ
 	h = 1 .- δ/α./ϕ
 	S = 1 .- h
 	G = (ϕ'./ ϕ) .* K
-	@info G
 	I = try
 		γ/δ * (G \ h)
 	catch err
